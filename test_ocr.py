@@ -13,6 +13,14 @@ images = ["sample01.png", "sample02.png"]
 texts = ["sample01.txt", "sample02.txt"]
 
 
+def histogram_qualization(image_pil):
+    img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2GRAY)
+    equ = cv.equalizeHist(img_cv)
+    img_equ_rgb = cv.cvtColor(equ, cv.COLOR_GRAY2RGB)
+    img_equ_pil = Image.fromarray(img_equ_rgb)
+    return img_equ_pil
+
+
 def otsu_tresholding(image_pil):
     img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2GRAY)
     # Otsu's thresholding
@@ -98,6 +106,13 @@ for idx, image_name in enumerate(images):
     print("Adaptive gaussian + Otsu threshold:")
     evaluate(result_th_adaptive_gaussian, base_text)
 
+    image_hist_eq = histogram_qualization(image)
+    image_adaptive_gaussian_hist_eq = adaptive_gaussian_tresholding(apply_gaussian_blur(image_hist_eq))
+    image_adaptive_gaussian_hist_eq.show()
+    result_adaptive_gaussian_hist_eq = pytesseract.image_to_string(image_adaptive_gaussian_hist_eq)
+    print("Adaptive gaussian + hist eq:")
+    evaluate(result_adaptive_gaussian_hist_eq, base_text)
+
     image_gaussian_blur = apply_gaussian_blur(image)
     image_adaptive_gaussian_blur = adaptive_gaussian_tresholding(image_gaussian_blur)
     image_th_adaptive_gaussian_blur = otsu_tresholding(image_adaptive_gaussian_blur)
@@ -112,7 +127,8 @@ for idx, image_name in enumerate(images):
     image_adaptive_gaussian_bilateral_filter = adaptive_gaussian_tresholding(image_bilateral_filter)
     image_th_adaptive_gaussian_bilateral_filter = otsu_tresholding(image_adaptive_gaussian_bilateral_filter)
     result_adaptive_gaussian_bilateral_filter = pytesseract.image_to_string(image_adaptive_gaussian_bilateral_filter)
-    result_th_adaptive_gaussian_bilateral_filter = pytesseract.image_to_string(image_th_adaptive_gaussian_bilateral_filter)
+    result_th_adaptive_gaussian_bilateral_filter = pytesseract.image_to_string(
+        image_th_adaptive_gaussian_bilateral_filter)
     print("Adaptive gaussian + bilateral filter: ")
     evaluate(result_adaptive_gaussian_bilateral_filter, base_text)
 
@@ -120,4 +136,3 @@ for idx, image_name in enumerate(images):
     evaluate(result_th_adaptive_gaussian_bilateral_filter, base_text)
 
     break
-
