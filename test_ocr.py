@@ -23,6 +23,31 @@ def otsu_tresholding(image_pil):
     return img_th_pil
 
 
+def apply_median_filter(image_pil):
+    img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2BGR)
+    img_blur = cv.medianBlur(img_cv, 3)
+    img_cv_rgb = cv.cvtColor(img_blur, cv.COLOR_BGR2RGB)
+    img_pil = Image.fromarray(img_cv_rgb)
+    img_pil.show()
+    return img_pil
+
+
+def apply_gaussian_blur(image_pil):
+    img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2BGR)
+    img_blur = cv.GaussianBlur(img_cv, (5, 5), 0)
+    img_cv_rgb = cv.cvtColor(img_blur, cv.COLOR_BGR2RGB)
+    img_pil = Image.fromarray(img_cv_rgb)
+    return img_pil
+
+
+def bilateral_filter(image_pil):
+    img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2BGR)
+    img_blur = cv.bilateralFilter(img_cv, 9, 100, 100)
+    img_cv_rgb = cv.cvtColor(img_blur, cv.COLOR_BGR2RGB)
+    img_pil = Image.fromarray(img_cv_rgb)
+    return img_pil
+
+
 def adaptive_gaussian_tresholding(image_pil):
     img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2GRAY)
     th = cv.adaptiveThreshold(img_cv, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, \
@@ -42,8 +67,7 @@ def evaluate(actual, expected):
 for idx, image_name in enumerate(images):
     image = Image.open(os.path.join(image_folder, image_name))
     print(image.format, image.mode)
-    if image.mode == "LA":
-        image = image.convert("RGB")
+    image = image.convert("RGB")
     result = pytesseract.image_to_string(image)
     # result = result.split("\n")
     # pprint(result)
@@ -60,10 +84,40 @@ for idx, image_name in enumerate(images):
 
     evaluate(result_th, base_text)
 
-    image_th_adaptive_gaussian = adaptive_gaussian_tresholding(image)
-    image_th_adaptive_gaussian = otsu_tresholding(image_th_adaptive_gaussian)
+    image_adaptive_gaussian = adaptive_gaussian_tresholding(image)
+    image_th_adaptive_gaussian = otsu_tresholding(image_adaptive_gaussian)
+    image_median_adaptive_gaussian = apply_median_filter(image_adaptive_gaussian)
+    result_adaptive_gaussian = pytesseract.image_to_string(image_adaptive_gaussian)
+    result_median_adaptive_gaussian = pytesseract.image_to_string(image_median_adaptive_gaussian)
     result_th_adaptive_gaussian = pytesseract.image_to_string(image_th_adaptive_gaussian)
-    print(result_th_adaptive_gaussian)
+    # print(result_th_adaptive_gaussian)
+    print("Adaptive gaussian:")
+    evaluate(result_adaptive_gaussian, base_text)
+    print("Adaptive gaussian + median filter:")
+    evaluate(result_median_adaptive_gaussian, base_text)
+    print("Adaptive gaussian + Otsu threshold:")
     evaluate(result_th_adaptive_gaussian, base_text)
 
+    image_gaussian_blur = apply_gaussian_blur(image)
+    image_adaptive_gaussian_blur = adaptive_gaussian_tresholding(image_gaussian_blur)
+    image_th_adaptive_gaussian_blur = otsu_tresholding(image_adaptive_gaussian_blur)
+    result_th_adaptive_gaussian_blur = pytesseract.image_to_string(image_th_adaptive_gaussian_blur)
+    result_adaptive_gaussian_blur = pytesseract.image_to_string(image_adaptive_gaussian_blur)
+    print("Adaptive gaussian + gaussian blur: ")
+    evaluate(result_adaptive_gaussian_blur, base_text)
+    print("Adaptive gaussian + gaussian blur + Otsu threshold: ")
+    evaluate(result_th_adaptive_gaussian_blur, base_text)
+
+    image_bilateral_filter = bilateral_filter(image)
+    image_adaptive_gaussian_bilateral_filter = adaptive_gaussian_tresholding(image_bilateral_filter)
+    image_th_adaptive_gaussian_bilateral_filter = otsu_tresholding(image_adaptive_gaussian_bilateral_filter)
+    result_adaptive_gaussian_bilateral_filter = pytesseract.image_to_string(image_adaptive_gaussian_bilateral_filter)
+    result_th_adaptive_gaussian_bilateral_filter = pytesseract.image_to_string(image_th_adaptive_gaussian_bilateral_filter)
+    print("Adaptive gaussian + bilateral filter: ")
+    evaluate(result_adaptive_gaussian_bilateral_filter, base_text)
+
+    print("Adaptive gaussian + bilateral filter + Otsu threshold: ")
+    evaluate(result_th_adaptive_gaussian_bilateral_filter, base_text)
+
     break
+
