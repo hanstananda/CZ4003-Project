@@ -36,21 +36,21 @@ def apply_median_filter(image_pil):
     img_blur = cv.medianBlur(img_cv, 3)
     img_cv_rgb = cv.cvtColor(img_blur, cv.COLOR_BGR2RGB)
     img_pil = Image.fromarray(img_cv_rgb)
-    img_pil.show()
+    # img_pil.show()
     return img_pil
 
 
-def apply_gaussian_blur(image_pil):
+def apply_gaussian_blur(image_pil, kernel_size=(5, 5)):
     img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2BGR)
-    img_blur = cv.GaussianBlur(img_cv, (5, 5), 0)
+    img_blur = cv.GaussianBlur(img_cv, kernel_size, 0)
     img_cv_rgb = cv.cvtColor(img_blur, cv.COLOR_BGR2RGB)
     img_pil = Image.fromarray(img_cv_rgb)
     return img_pil
 
 
-def bilateral_filter(image_pil):
+def bilateral_filter(image_pil, d=9, sigma_color=100, sigma_space=100):
     img_cv = cv.cvtColor(numpy.array(image_pil), cv.COLOR_RGB2BGR)
-    img_blur = cv.bilateralFilter(img_cv, 9, 100, 100)
+    img_blur = cv.bilateralFilter(img_cv, d=d, sigmaColor=sigma_color, sigmaSpace=sigma_space)
     img_cv_rgb = cv.cvtColor(img_blur, cv.COLOR_BGR2RGB)
     img_pil = Image.fromarray(img_cv_rgb)
     return img_pil
@@ -108,9 +108,9 @@ for idx, image_name in enumerate(images):
 
     image_hist_eq = histogram_qualization(image)
     image_adaptive_gaussian_hist_eq = adaptive_gaussian_tresholding(apply_gaussian_blur(image_hist_eq))
-    image_adaptive_gaussian_hist_eq.show()
+    # image_adaptive_gaussian_hist_eq.show()
     result_adaptive_gaussian_hist_eq = pytesseract.image_to_string(image_adaptive_gaussian_hist_eq)
-    print("Adaptive gaussian + hist eq:")
+    print("Adaptive gaussian + gaussian blur + hist eq :")
     evaluate(result_adaptive_gaussian_hist_eq, base_text)
 
     image_gaussian_blur = apply_gaussian_blur(image)
@@ -136,3 +136,6 @@ for idx, image_name in enumerate(images):
     evaluate(result_th_adaptive_gaussian_bilateral_filter, base_text)
 
     break
+
+if __name__ == "__main__":
+    pass
