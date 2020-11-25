@@ -7,13 +7,15 @@ import scipy.signal
 import scipy.stats
 
 
-def threshold_image(image_np, threshold=0):
+def threshold_image(image_np, threshold=0, op = '<'):
     # Set pixels with value less than threshold to 0, otherwise set is as 255
-    image_result_np = np.where(image_np < threshold, 0, 1)
+    if op == '<':
+        image_result_np = np.where(image_np < threshold, 0, 1)
+    else:
+        image_result_np = np.where(image_np > threshold, 0, 1)
     # Convert numpy array back to PIL image object
     image_result = Image.fromarray((image_result_np * 255).astype(np.uint8))
     return image_result
-
 
 def otsu_thresholding_in(image, max_value=255, is_normalized=False):
     # Image must be in grayscale
@@ -48,13 +50,13 @@ def otsu_thresholding_in(image, max_value=255, is_normalized=False):
 
 
 # https://stackoverflow.com/questions/29731726/how-to-calculate-a-gaussian-kernel-matrix-efficiently-in-numpy
-def gaussian_kernel(kernel_size=7, std=1):
+def gaussian_kernel(kernel_size=7, std=1, normalize=True):
     gaussian_kernel_1d = scipy.signal.gaussian(kernel_size, std=std).reshape(kernel_size, 1)
-    # print(gaussian_kernel_1d)
     gaussian_kernel_2d = np.outer(gaussian_kernel_1d, gaussian_kernel_1d)
-    # print(gaussian_kernel_2d)
-    return gaussian_kernel_2d / gaussian_kernel_2d.sum()
-
+    if normalize:
+        return gaussian_kernel_2d / gaussian_kernel_2d.sum()
+    else:
+        return gaussian_kernel_2d
 
 # https://www.mathworks.com/matlabcentral/fileexchange/8647-local-adaptive-thresholding
 # https://homepages.inf.ed.ac.uk/rbf/HIPR2/adpthrsh.htm
