@@ -4,8 +4,15 @@ import numpy as np
 from PIL import Image
 import scipy.ndimage
 import scipy.signal
-
 import scipy.stats
+
+
+def threshold_image(image_np, threshold=0):
+    # Set pixels with value less than threshold to 0, otherwise set is as 255
+    image_result_np = np.where(image_np < threshold, 0, 1)
+    # Convert numpy array back to PIL image object
+    image_result = Image.fromarray((image_result_np * 255).astype(np.uint8))
+    return image_result
 
 
 def otsu_thresholding_in(image, max_value=255, is_normalized=False):
@@ -35,9 +42,7 @@ def otsu_thresholding_in(image, max_value=255, is_normalized=False):
     index_of_max_val = np.argmax(inter_class_variance)
 
     threshold = bin_mids[:-1][index_of_max_val]
-    # Set pixels with value less than threshold to 0, otherwise set is as 255
-    image_result_np = np.where(image_np < threshold, 0, 1)
-    image_result = Image.fromarray((image_result_np * 255).astype(np.uint8))
+    image_result = threshold_image(image_np, threshold)
 
     return image_result, threshold
 
@@ -64,9 +69,8 @@ def adaptive_gaussian_thresholding_in(image, max_value=255, block_size=7, C=0, s
     image_result_np = image_convolved_np - image_np - C
     # print(image_result_np)
 
-    # Set pixels with value less than 0 to 0, otherwise set it to 255
-    image_result_np = np.where(image_result_np > 0, 0, 1)
-    image_result = Image.fromarray((image_result_np * 255).astype(np.uint8))
+    image_result = threshold_image(image_result_np)
+
     return image_result
 
 
@@ -78,10 +82,7 @@ def adaptive_mean_thresholding_in(image, max_value=255, block_size=7, C=0):
     kernel = np.ones((block_size, block_size)) / (block_size ** 2)
     image_convolved_np = scipy.signal.convolve2d(image_np, kernel, mode='same', boundary='symm')
     image_result_np = image_convolved_np - image_np - C
-
-    # Set pixels with value less than 0 to 0, otherwise set it to 255
-    image_result_np = np.where(image_result_np > 0, 0, 1)
-    image_result = Image.fromarray((image_result_np * 255).astype(np.uint8))
+    image_result = threshold_image(image_result_np)
 
     return image_result
 
