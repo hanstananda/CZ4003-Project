@@ -17,36 +17,38 @@ def threshold_image(image_np, threshold=0, op = '<'):
     image_result = Image.fromarray((image_result_np * 255).astype(np.uint8))
     return image_result
 
-def otsu_thresholding_in(image, max_value=255, is_normalized=False):
+
+def otsu_thresholding_in(image, max_value=255):
     # Image must be in grayscale
     image_np = np.array(image)
     # Set total number of bins in the histogram
-    bins_num = 256  # Since our image is 8 bits, we used 256 for now
+    number_of_bins = 256  # Since our image is 8 bits, we used 256 for now
     # Get the image histogram
-    hist, bin_edges = np.histogram(image_np, bins=bins_num)
-    # Get normalized histogram if it is required
-    if is_normalized:
-        hist = np.divide(hist.ravel(), hist.max())
+    histogram, bin_edges = np.histogram(image_np, bins=number_of_bins)
+
     # Calculate centers of bins
-    bin_mids = (bin_edges[:-1] + bin_edges[1:]) / 2.
-    # Iterate over all thresholds (indices) and get the probabilities w1(t), w2(t)
-    weight1 = np.cumsum(hist)
-    weight2 = np.cumsum(hist[::-1])[::-1]
+    bin_center = (bin_edges[:-1] + bin_edges[1:]) / 2.
+    # Iterate over all thresholds (indices) and get the probabilities \w_0(t), \w_1(t)
+    w_0 = np.cumsum(histogram)
+    w_1 = np.cumsum(histogram[::-1])[::-1]
 
     # Get the class means \mu0(t)
-    mean1 = np.cumsum(hist * bin_mids) / weight1
+    m_0 = np.cumsum(histogram * bin_center) / w_0
     # Get the class means \mu1(t)
-    mean2 = (np.cumsum((hist * bin_mids)[::-1]) / weight2[::-1])[::-1]
+    m_1 = (np.cumsum((histogram * bin_center)[::-1]) / w_1[::-1])[::-1]
 
-    inter_class_variance = weight1[:-1] * weight2[1:] * (mean1[:-1] - mean2[1:]) ** 2
+    # Calculate the inter-class variance
+    inter_var = w_0[:-1] * w_1[1:] * (m_0[:-1] - m_1[1:]) ** 2
 
-    # Maximize the inter_class_variance function val
-    index_of_max_val = np.argmax(inter_class_variance)
+    # Minimize intra-class variance, which is equal to maximize the inter_class_variance function val
+    max_val_index = np.argmax(inter_var)
 
-    threshold = bin_mids[:-1][index_of_max_val]
-    image_result = threshold_image(image_np, threshold)
+    # Get the threshold value
+    thresh = bin_center[:-1][max_val_index]
+    # Get the image by performing the thresholding
+    image_result = threshold_image(image_np, thresh)
 
-    return image_result, threshold
+    return image_result, thresh
 
 
 # https://stackoverflow.com/questions/29731726/how-to-calculate-a-gaussian-kernel-matrix-efficiently-in-numpy
